@@ -1,0 +1,27 @@
+query GetDeparturesForStops($ids: [String!]!) {
+    stops(ids: $ids) {
+        name
+        gtfsId
+        routes {
+        shortName
+        }
+        stoptimesWithoutPatterns(numberOfDepartures: 10) {
+        stop {
+            platformCode
+        }
+        serviceDay
+        realtime
+        scheduledArrival
+        realtimeArrival
+        scheduledDeparture
+        realtimeDeparture
+        trip {
+            route {
+            shortName
+            longName
+            }
+        }
+        headsign
+        }
+    }
+}

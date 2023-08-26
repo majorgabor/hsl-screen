@@ -1,0 +1,15 @@
+{
+    "operationName": "GetDeparturesForStops",
+    "variables": {
+        "ids": [
+            "HSL:1301212",
+            "HSL:1301451",
+            "HSL:1301299",
+            "HSL:1301123",
+            "HSL:1301149",
+            "HSL:1301122",
+            "HSL:1301124"
+        ]
+    },
+    "query": ""
+}
