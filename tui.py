@@ -13,7 +13,10 @@ class TUI:
         # create a Layout
         self.layout = Layout()
         self.layout.split_column(
-            Layout(name="upper"), Layout(name="middle"), Layout(name="lower")
+            Layout(name="upper"),
+            Layout(name="middle"),
+            Layout(name="lower"),
+            Layout(name="footer"),
         )
         self.layout["upper"].size = None
         self.layout["upper"].ratio = 1
@@ -33,6 +36,9 @@ class TUI:
             Layout(name="left"),
             Layout(name="right"),
         )
+        self.layout["footer"].size = None
+        self.layout["footer"].ratio = 1
+        self.layout["footer"].visible = False
 
         # create Live Display
         self.live_screen = Live(renderable=self.layout, screen=True, auto_refresh=False)
@@ -41,20 +47,10 @@ class TUI:
     def __del__(self) -> None:
         self.live_screen.stop()
 
-    def updateScreen(self, stops, temperature):
-        # time
-        self.layout["upper"]["left"].update(
-            Align.center(
-                Panel(time.strftime("%H:%M"), box=box.MINIMAL), vertical="middle"
-            )
-        )
-        # temperature
-        self.layout["upper"]["right"].update(
-            Align.center(
-                Panel(f"{temperature} \N{DEGREE SIGN}C", box=box.MINIMAL), vertical="middle"
-            )
-        )
-
+    def updateTimeTables(self, stops):
+        """
+        Puts the time table (schedules) on the screen
+        """
         stop_groups = createStopGroups(stops)
         self.layout["middle"]["left"].update(
             generateTable(stop_groups["campus"], "campus")
@@ -69,8 +65,47 @@ class TUI:
             generateTable(stop_groups["north"], "north from here")
         )
 
-        self.live_screen.update(renderable=self.layout, refresh=True)
+    def updateTemperature(self, temperature_value):
+        """
+        Puts the temperature value on the screen
+        """
+        self.layout["upper"]["right"].update(
+            Align.center(
+                Panel(f"{temperature_value} \N{DEGREE SIGN}C", box=box.MINIMAL),
+                vertical="middle",
+            )
+        )
 
+    def putMessageOnFooter(self, message):
+        self.layout["footer"].visible = True
+        self.layout["footer"].update(
+            Align.center(Panel(message, box=box.MINIMAL), vertical="middle")
+        )
+
+    def updateScreen(self, err_msgs):
+        """
+        Puts time and error messages if any then updates the live screen
+        """
+        # put time on screen
+        self.layout["upper"]["left"].update(
+            Align.center(
+                Panel(time.strftime("%H:%M"), box=box.MINIMAL), vertical="middle"
+            )
+        )
+
+        # pint error messages if needed
+        if err_msgs:
+            self.layout["footer"].visible = True
+            text = "[red]Something unexpected occured!"
+            for msg in err_msgs:
+                text = text + "\n[red]" + msg
+            self.layout["footer"].update(
+                Align.center(Panel(text, box=box.MINIMAL), vertical="middle")
+            )
+        else:
+            self.layout["footer"].visible = False
+
+        self.live_screen.update(renderable=self.layout, refresh=True)
         time.sleep(15)
 
 

@@ -11,25 +11,32 @@ if __name__ == "__main__":
     temperature = 0
 
     while True:
-        # update from API
-        try:
-            data = HslHandler.GetDeparturesForStops()
-        except RuntimeError as exc:
-            # stop UI
-            del terminal_ui
-            # print error
-            print(exc)
-            # exit with code 1
-            exit(1)
+        err_msgs = []
 
-        # extract useful information
-        stops = parseHSLData(data)
+        try:
+            # update from API
+            hsl_data = HslHandler.GetDeparturesForStops()
+            # extract useful information
+            schedules = parseHSLData(hsl_data)
+            # update screen with time tables
+            terminal_ui.updateTimeTables(schedules)
+        except RuntimeError as exc:
+            err_msgs.append("Could not update schedules!")
 
         # update temperature every ~5 minutes
         if counter % 20 == 0:
-            temperature = FmiHandler.getTemperatureFromFmi()
+            try:
+                # update from FMI
+                temperature = FmiHandler.getTemperatureFromFmi()
+                # update screen with temperatue
+                terminal_ui.updateTemperature(temperature)
+            except RuntimeError as exc:
+                err_msgs.append("Could not update temperature!")
+                # reset counter
+                counter = -1 # -1 coz the end increment
+
 
         # update screen
-        terminal_ui.updateScreen(stops, temperature)
-
+        terminal_ui.updateScreen(err_msgs)
+        # increment counter
         counter = counter + 1
