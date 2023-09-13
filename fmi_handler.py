@@ -28,7 +28,7 @@ class FmiHandler:
 
         try:
             # make a request to the API
-            response = requests.get(FmiHandler.FMI_API_URL, params=params)
+            response = requests.get(FmiHandler.FMI_API_URL, params=params, timeout=3)
         except requests.exceptions.RequestException as exc:
             raise RuntimeError("Failed to load data from FMI's API") from exc
 
@@ -37,7 +37,7 @@ class FmiHandler:
         member = root.find("{http://www.opengis.net/wfs/2.0}member")
         element = member.find("{http://xml.fmi.fi/schema/wfs/2.0}BsWfsElement")
         parameter = element.find("{http://xml.fmi.fi/schema/wfs/2.0}ParameterValue")
-        
+
         return parameter.text
 
     @staticmethod

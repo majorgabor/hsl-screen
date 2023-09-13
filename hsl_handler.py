@@ -30,6 +30,7 @@ class HslHandler:
                 json=HslHandler.GET_DEPARTURES_FOR_STOPS_PAYLOAD,
                 headers=HslHandler.REQUEST_HEADERS,
                 verify=False,
+                timeout=3,
             )
         except requests.exceptions.RequestException as exc:
             raise RuntimeError("Failed to load data from HSL's API") from exc
