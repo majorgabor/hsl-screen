@@ -1,16 +1,19 @@
 # hsl-screen
 
-This is a simple terminal application to show the departure times of HSL's buses around the area where I live so I don't have to check my phone.
+A simple terminal application to display the local public transport departure times around a given area.
 
-It has been deployed to a Raspberry pi model B+ v1.2.
+The application has been deployed to a Raspberry pi model B+ v1.2.
+
+![Screenshot](hsl-screen-screenshot.png)
 
 ## Requirments
 
-Rich
-`python -m pip install rich`
+External libraries used:
+ - Rich, for terminal UI
+ - Requests, to handle HTTP requests
+ - urllib3, to set HTTP settings
 
-Requests
-`python -m pip install requests`
+`python -m pip install rich requests urllib3`
 
 ## Use
 
