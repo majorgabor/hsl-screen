@@ -144,7 +144,7 @@ def createStopGroups(data: list) -> dict:
 
         elif stop.id == "HSL:1301122":
             for schedule in stop.schedules:
-                if schedule.line_number == "500" or schedule.line_number == "510":
+                if schedule.line_number == "500" or schedule.line_number == "510" or schedule.line_number == "510N":
                     grouped_data["pasila-kallio"].append([schedule])
                 else:
                     grouped_data["city-center"].append([schedule])
