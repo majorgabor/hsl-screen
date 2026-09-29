@@ -159,6 +159,10 @@ def createStopGroups(data: list) -> dict:
                 for idx, schedule in enumerate(stop.schedules):
                     if schedule.line_number == "52" or schedule.line_number == "57":
                         stop.schedules.pop(idx)
+            elif stop.id == "HSL:1301149":
+                for idx, schedule in enumerate(stop.schedules):
+                    if schedule.direction == "Munkkiniemi":
+                        stop.schedules.pop(idx)
             grouped_data["north"].append(stop.schedules)
 
         elif stop.id == "HSL:1301122":
