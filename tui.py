@@ -24,6 +24,14 @@ class TUI:
             Layout(name="left"),
             Layout(name="right"),
         )
+        self.layout["upper"]["right"].size = None
+        self.layout["upper"]["right"].ratio = 1
+        self.layout["upper"]["right"].split_column(
+            Layout(name="upper2"),
+            Layout(name="lower2"),
+        )
+        self.layout["upper"]["right"]["upper2"].ratio = 1
+        self.layout["upper"]["right"]["lower2"].ratio = 4
         self.layout["middle"].size = None
         self.layout["middle"].ratio = 3
         self.layout["middle"].split_row(
@@ -65,15 +73,26 @@ class TUI:
             generateTable(stop_groups["north"], "north from here")
         )
 
-    def updateTemperature(self, temperature_value):
-        """
-        Puts the temperature value on the screen
-        """
-        self.layout["upper"]["right"].update(
-            Align.center(
-                Panel(f"{temperature_value} \N{DEGREE SIGN}C", box=box.MINIMAL),
-                vertical="middle",
+    def updateWeather(self, weather):
+        table = Table(box=None, title=None)
+        table.add_column("")
+        table.add_column("Temp")
+        table.add_column("Rain")
+        table.add_column("Wind")
+        table.add_column("Cloud")
+        for hours, forecast in weather["forecasts"].items():
+            table.add_row(
+                f"+{hours}h",
+                f"{forecast['temperature']} \N{DEGREE SIGN}C",
+                f"{forecast['precipitation1h']} mm",
+                f"{forecast['windspeedms']} m/s",
+                f"{forecast['totalcloudcover']}%",
             )
+        self.layout["upper"]["right"]["upper2"].update(
+                    Align.center(Panel(f"{weather['observed_temperature']} \N{DEGREE SIGN}C", box=box.MINIMAL), vertical="middle")
+        )
+        self.layout["upper"]["right"]["lower2"].update(
+                            Align.center(Panel(table, box=box.MINIMAL), vertical="middle")
         )
 
     def putMessageOnFooter(self, message):

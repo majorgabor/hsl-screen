@@ -8,7 +8,7 @@ if __name__ == "__main__":
     terminal_ui = TUI()
 
     counter = 0
-    temperature = 0
+    weather = None
 
     while True:
         err_msgs = []
@@ -27,11 +27,10 @@ if __name__ == "__main__":
         if counter % 20 == 0:
             try:
                 # update from FMI
-                temperature = FmiHandler.getTemperatureFromFmi()
-                # update screen with temperatue
-                terminal_ui.updateTemperature(temperature)
+                weather = FmiHandler.getWeatherFromFmi()
+                terminal_ui.updateWeather(weather)
             except RuntimeError as exc:
-                err_msgs.append("Could not update temperature!")
+                err_msgs.append("Could not update weather!")
                 # reset counter
                 counter = -1 # -1 coz the end increment
 
