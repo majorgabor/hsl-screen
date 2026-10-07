@@ -21,7 +21,7 @@ class FmiHandler:
     def getWeatherFromFmi():
         now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
         forecasts_start = FmiHandler.roundDownDateTime(now + dt.timedelta(hours=1))
-        forecasts_end = forecasts_start + dt.timedelta(hours=5)
+        forecasts_end = forecasts_start + dt.timedelta(hours=8)
 
         observed = FmiHandler._load(
             {
@@ -53,7 +53,7 @@ class FmiHandler:
             raise RuntimeError("FMI returned no measured temperature")
 
         result = {"observed_temperature": max(temperatures)[1], "forecasts": {}}
-        for hours in (1, 2, 3, 6):
+        for hours in (1, 2, 3, 6, 9):
             target = FmiHandler._timestamp(
                 FmiHandler.roundDownDateTime(now + dt.timedelta(hours=hours))
             )

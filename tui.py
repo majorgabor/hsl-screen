@@ -21,17 +21,16 @@ class TUI:
         self.layout["upper"].size = None
         self.layout["upper"].ratio = 1
         self.layout["upper"].split_row(
-            Layout(name="left"),
-            Layout(name="right"),
+            Layout(name="upper_left"),
+            Layout(name="upper_middle"),
+            Layout(name="upper_right"),
         )
-        self.layout["upper"]["right"].size = None
-        self.layout["upper"]["right"].ratio = 1
-        self.layout["upper"]["right"].split_column(
-            Layout(name="upper2"),
-            Layout(name="lower2"),
-        )
-        self.layout["upper"]["right"]["upper2"].ratio = 1
-        self.layout["upper"]["right"]["lower2"].ratio = 4
+        self.layout["upper"]["upper_left"].size = None
+        self.layout["upper"]["upper_left"].ratio = 2
+        self.layout["upper"]["upper_middle"].ratio = 1
+        self.layout["upper"]["upper_middle"].size = None
+        self.layout["upper"]["upper_right"].ratio = 2
+        self.layout["upper"]["upper_right"].size = None
         self.layout["middle"].size = None
         self.layout["middle"].ratio = 3
         self.layout["middle"].split_row(
@@ -75,23 +74,28 @@ class TUI:
 
     def updateWeather(self, weather):
         table = Table(box=None, title=None)
-        table.add_column("")
-        table.add_column("Temp")
-        table.add_column("Rain")
-        table.add_column("Wind")
-        table.add_column("Cloud")
-        for hours, forecast in weather["forecasts"].items():
+        table.add_column("", justify="center")
+        for hours in weather["forecasts"]:
+            table.add_column(f"+{hours}h", justify="center")
+        table.add_column("", justify="center")
+        for label, parameter, unit in (
+            ("Temp", "temperature", "\N{DEGREE SIGN}C"),
+            ("Rain", "precipitation1h", "mm"),
+            ("Wind", "windspeedms", "m/s"),
+            ("Cloud", "totalcloudcover", "%"),
+        ):
             table.add_row(
-                f"+{hours}h",
-                f"{forecast['temperature']} \N{DEGREE SIGN}C",
-                f"{forecast['precipitation1h']} mm",
-                f"{forecast['windspeedms']} m/s",
-                f"{forecast['totalcloudcover']}%",
+                label,
+                *[
+                    f"{forecast[parameter]}"
+                    for forecast in weather["forecasts"].values()
+                ],
+                unit
             )
-        self.layout["upper"]["right"]["upper2"].update(
+        self.layout["upper"]["upper_middle"].update(
                     Align.center(Panel(f"{weather['observed_temperature']} \N{DEGREE SIGN}C", box=box.MINIMAL), vertical="middle")
         )
-        self.layout["upper"]["right"]["lower2"].update(
+        self.layout["upper"]["upper_right"].update(
                             Align.center(Panel(table, box=box.MINIMAL), vertical="middle")
         )
 
@@ -106,7 +110,7 @@ class TUI:
         Puts time and error messages if any then updates the live screen
         """
         # put time on screen
-        self.layout["upper"]["left"].update(
+        self.layout["upper"]["upper_left"].update(
             Align.center(
                 Panel(time.strftime("%H:%M"), box=box.MINIMAL), vertical="middle"
             )
