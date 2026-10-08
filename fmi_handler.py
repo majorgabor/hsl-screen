@@ -19,28 +19,29 @@ class FmiHandler:
 
     @staticmethod
     def getWeatherFromFmi():
-        now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
-        forecasts_start = FmiHandler.roundDownDateTime(now + dt.timedelta(hours=1))
-        forecasts_end = forecasts_start + dt.timedelta(hours=8)
+        now = dt.datetime.now().astimezone().replace(second=0, microsecond=0)
+        targets = FmiHandler._forecastTargets(now)
 
         observed = FmiHandler._load(
             {
                 "storedquery_id": "fmi::observations::weather::simple",
                 "parameters": "temperature",
                 "fmisid": FmiHandler.STATION_ID,
-                "starttime": FmiHandler._timestamp(now - dt.timedelta(hours=1)),
-                "endtime": FmiHandler._timestamp(now),
+                "starttime": FmiHandler._timestamp(
+                    (now - dt.timedelta(hours=1)).astimezone(dt.timezone.utc)
+                ),
+                "endtime": FmiHandler._timestamp(now.astimezone(dt.timezone.utc)),
                 "timestep": "10",
             }
         )
-        forecasts = FmiHandler._load(
+        forecast_values = FmiHandler._load(
             {
                 "storedquery_id": "fmi::forecast::harmonie::surface::point::simple",
                 "parameters": FmiHandler.FORECAST_PARAMETERS,
                 "latlon": FmiHandler.FORECAST_LOCATION,
-                "starttime": FmiHandler._timestamp(forecasts_start),
-                "endtime": FmiHandler._timestamp(forecasts_end),
-                "timestep": "5",
+                "starttime": FmiHandler._timestamp(targets[0].astimezone(dt.timezone.utc)),
+                "endtime": FmiHandler._timestamp(targets[-1].astimezone(dt.timezone.utc)),
+                "timestep": "60",
             }
         )
 
@@ -52,15 +53,37 @@ class FmiHandler:
         if not temperatures:
             raise RuntimeError("FMI returned no measured temperature")
 
-        result = {"observed_temperature": max(temperatures)[1], "forecasts": {}}
-        for hours in (1, 2, 3, 6, 9):
-            target = FmiHandler._timestamp(
-                FmiHandler.roundDownDateTime(now + dt.timedelta(hours=hours))
+        result = {"observed_temperature": max(temperatures)[1], "forecasts": []}
+        for target in targets:
+            timestamp = FmiHandler._timestamp(target.astimezone(dt.timezone.utc))
+            if timestamp not in forecast_values:
+                raise RuntimeError(f"FMI returned no forecast for {target:%H:%M}")
+            result["forecasts"].append(
+                {
+                    "time": target.strftime("%H:%M")
+                    if target.date() == now.date()
+                    else target.strftime("%a %H:%M"),
+                    **forecast_values[timestamp],
+                }
             )
-            if target not in forecasts:
-                raise RuntimeError(f"FMI returned no forecast for +{hours}h")
-            result["forecasts"][hours] = forecasts[target]
         return result
+
+    @staticmethod
+    def _forecastTargets(now):
+        first_hour = (now + dt.timedelta(hours=1)).replace(
+            minute=0, second=0, microsecond=0
+        )
+        targets = [first_hour + dt.timedelta(hours=hours) for hours in range(3)]
+        day = now.date()
+        while len(targets) < 6:
+            for hour in (9, 12, 15, 18, 21):
+                target = dt.datetime.combine(day, dt.time(hour)).replace(tzinfo=now.tzinfo)
+                if target > now and target not in targets:
+                    targets.append(target)
+                    if len(targets) == 6:
+                        break
+            day += dt.timedelta(days=1)
+        return targets
 
     @staticmethod
     def _load(params):

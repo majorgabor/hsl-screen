@@ -26,10 +26,10 @@ class TUI:
             Layout(name="upper_right"),
         )
         self.layout["upper"]["upper_left"].size = None
-        self.layout["upper"]["upper_left"].ratio = 2
-        self.layout["upper"]["upper_middle"].ratio = 1
+        self.layout["upper"]["upper_left"].ratio = 1
         self.layout["upper"]["upper_middle"].size = None
-        self.layout["upper"]["upper_right"].ratio = 2
+        self.layout["upper"]["upper_middle"].ratio = 1
+        self.layout["upper"]["upper_right"].ratio = 4
         self.layout["upper"]["upper_right"].size = None
         self.layout["middle"].size = None
         self.layout["middle"].ratio = 3
@@ -73,30 +73,27 @@ class TUI:
         )
 
     def updateWeather(self, weather):
-        table = Table(box=None, title=None)
-        table.add_column("", justify="center")
-        for hours in weather["forecasts"]:
-            table.add_column(f"+{hours}h", justify="center")
-        table.add_column("", justify="center")
-        for label, parameter, unit in (
-            ("Temp", "temperature", "\N{DEGREE SIGN}C"),
-            ("Rain", "precipitation1h", "mm"),
-            ("Wind", "windspeedms", "m/s"),
-            ("Cloud", "totalcloudcover", "%"),
-        ):
-            table.add_row(
-                label,
-                *[
-                    f"{forecast[parameter]}"
-                    for forecast in weather["forecasts"].values()
-                ],
-                unit
-            )
         self.layout["upper"]["upper_middle"].update(
-                    Align.center(Panel(f"{weather['observed_temperature']} \N{DEGREE SIGN}C", box=box.MINIMAL), vertical="middle")
+            Align.center(Panel(f"\n{weather['observed_temperature']}\N{DEGREE SIGN}C", box=box.MINIMAL), vertical="middle")
+        )
+
+        table = Table(box=None, title=None, expand=True)
+        for forecast in weather['forecasts']:
+            table.add_column(f"[bold]{forecast['time']}[/bold]", justify="center")
+        table.add_row(
+            *[
+                weatherSymbolToAscii(forecast['weathersymbol3'])
+                for forecast in weather['forecasts']
+            ]
+        )
+        table.add_row(
+            *[
+                f"{forecast['temperature']}\N{DEGREE SIGN}C"
+                for forecast in weather['forecasts']
+            ]
         )
         self.layout["upper"]["upper_right"].update(
-                            Align.center(Panel(table, box=box.MINIMAL), vertical="middle")
+            Align.center(Panel(table, box=box.MINIMAL), vertical="middle")
         )
 
     def putMessageOnFooter(self, message):
@@ -112,7 +109,7 @@ class TUI:
         # put time on screen
         self.layout["upper"]["upper_left"].update(
             Align.center(
-                Panel(time.strftime("%H:%M"), box=box.MINIMAL), vertical="middle"
+                Panel(f"\n{time.strftime('%H:%M')}", box=box.MINIMAL), vertical="middle"
             )
         )
 
@@ -133,6 +130,37 @@ class TUI:
 
 
 ### Non class member helper functions ###
+
+def weatherSymbolToAscii(weathersymbol3):
+    return {
+        1:  "CLEAR",
+        2:  "PARTLY CLOUDY",
+        21: "LIGHT SHOWERS",
+        22: "MODERATE SHOWERS",
+        23: "HEAVY SHOWERS",
+        3:  "CLOUDY",
+        31: "LIGHT RAIN",
+        32: "MODERATE RAIN",
+        33: "HEAVY RAIN",
+        41: "LIGHT SNOW SHOWERS",
+        42: "MODERATE SNOW SHOWERS",
+        43: "HEAVY SNOW SHOWERS",
+        51: "LIGHT SNOWFALL",
+        52: "MODERATE SNOWFALL",
+        53: "HEAVY SNOWFALL",
+        61: "THUNDERSHOWERS",
+        62: "HEAVY THUNDERSHOWERS",
+        63: "THUNDER",
+        64: "HEAVY THUNDER",
+        71: "LIGHT SLEET SHOWERS",
+        72: "MODERATE SLEET SHOWERS",
+        73: "HEAVY SLEET SHOWERS",
+        81: "LIGHT SLEED",
+        82: "MODERATE SLEET",
+        83: "HEAVY SLEET",
+        91: "MIST",
+        92: "FOG",
+    }.get(int(float(weathersymbol3)), "WEATHER")
 
 
 def createStopGroups(data: list) -> dict:
